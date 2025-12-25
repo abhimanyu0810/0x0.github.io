@@ -1,11 +1,1192 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title> Abhimanyu Prakash | Portfolio</title>
-</head>
-<body>
-  <h1>Your Name</h1>
-  <p> Cybersecurity Enthusiast</p>
-</body>
-</html>
+import React, { useState, useEffect } from 'react';
+import { Menu, X, Github, Linkedin, Twitter, Mail, ExternalLink, Calendar, Clock, Download, ChevronRight } from 'lucide-react';
 
+// Sample blog posts data
+const blogPosts = [
+  {
+    id: 1,
+    title: "Breaking Down a Real-World Phishing Campaign",
+    excerpt: "Detailed analysis of a sophisticated phishing attack targeting corporate employees. Learn how threat actors leverage social engineering and evasion techniques.",
+    date: "2024-12-20",
+    readTime: "8 min read",
+    content: `# Breaking Down a Real-World Phishing Campaign
+
+## Executive Summary
+
+During a recent SOC shift, our team detected and analyzed a sophisticated phishing campaign that successfully bypassed initial email filters. This writeup details the attack methodology, indicators of compromise, and remediation steps.
+
+## Initial Detection
+
+The attack was first identified through our SIEM when multiple users reported suspicious emails from what appeared to be our IT department.
+
+### Key Indicators
+- Spoofed sender domain
+- Urgency-based social engineering
+- Malicious attachment disguised as PDF
+
+## Technical Analysis
+
+\`\`\`python
+# Email header analysis
+def analyze_headers(email_headers):
+    spf_result = email_headers.get('Received-SPF')
+    dkim_result = email_headers.get('DKIM-Signature')
+    
+    if spf_result == 'fail':
+        return {'risk': 'high', 'reason': 'SPF validation failed'}
+    return {'risk': 'low'}
+\`\`\`
+
+The malicious attachment contained an embedded macro that attempted to download a second-stage payload from a compromised WordPress site.
+
+## Remediation Steps
+
+1. Blocked sender domain at gateway
+2. Quarantined all related emails
+3. Isolated affected endpoints
+4. Updated email filtering rules
+5. Conducted user awareness training
+
+## Lessons Learned
+
+This incident reinforced the importance of defense-in-depth strategies and continuous user education.`
+  },
+  {
+    id: 2,
+    title: "TryHackMe Lab: Active Directory Exploitation",
+    excerpt: "Complete walkthrough of Active Directory penetration testing techniques including Kerberoasting, Pass-the-Hash, and privilege escalation.",
+    date: "2024-12-15",
+    readTime: "12 min read",
+    content: `# TryHackMe Lab: Active Directory Exploitation
+
+## Lab Overview
+
+This lab focuses on exploiting common misconfigurations in Active Directory environments.
+
+## Reconnaissance
+
+\`\`\`bash
+# Initial enumeration
+nmap -sC -sV -p- 10.10.10.100
+enum4linux -a 10.10.10.100
+\`\`\`
+
+## Kerberoasting Attack
+
+Kerberoasting allows us to request service tickets and crack them offline.
+
+\`\`\`powershell
+# Request service tickets
+Get-DomainUser -SPN | Get-DomainSPNTicket
+\`\`\`
+
+Successfully cracked the hash and obtained credentials for a service account.
+
+## Privilege Escalation
+
+Using BloodHound to identify privilege escalation paths...`
+  },
+  {
+    id: 3,
+    title: "Building a Home SOC Lab: Complete Guide",
+    excerpt: "Step-by-step guide to setting up your own Security Operations Center lab using open-source tools like ELK Stack, Suricata, and TheHive.",
+    date: "2024-12-10",
+    readTime: "15 min read",
+    content: `# Building a Home SOC Lab: Complete Guide
+
+## Why Build a Home SOC Lab?
+
+Hands-on experience is crucial for cybersecurity careers.
+
+## Architecture Overview
+
+Our lab will consist of:
+- Log aggregation (ELK Stack)
+- Network IDS (Suricata)
+- Case management (TheHive)
+- Threat intelligence (MISP)
+
+## Setup Instructions
+
+\`\`\`bash
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+\`\`\`
+
+Stay tuned for detailed configuration steps...`
+  }
+];
+
+// Sample projects data
+const projects = [
+  {
+    title: "Automated Threat Intelligence Aggregator",
+    description: "Python-based tool that collects and correlates threat intelligence from multiple sources (VirusTotal, AbuseIPDB, AlienVault OTX). Features automated IOC enrichment and reporting.",
+    tech: ["Python", "APIs", "Pandas", "SQLite"],
+    github: "https://github.com/abhimanyu/threat-intel-aggregator",
+    demo: null
+  },
+  {
+    title: "SOC Automation Scripts",
+    description: "Collection of Python scripts for automating common SOC tasks including log parsing, alert triage, and incident response workflows. Reduced manual analysis time by 40%.",
+    tech: ["Python", "Regex", "JSON", "Automation"],
+    github: "https://github.com/abhimanyu/soc-automation",
+    demo: null
+  },
+  {
+    title: "Network Traffic Analyzer",
+    description: "Packet analysis tool built with Scapy for detecting anomalous network behavior. Includes custom detection rules for common attack patterns.",
+    tech: ["Python", "Scapy", "Wireshark", "PCAP"],
+    github: "https://github.com/abhimanyu/network-analyzer",
+    demo: null
+  },
+  {
+    title: "Phishing Detection Chrome Extension",
+    description: "Browser extension that analyzes URLs and page content in real-time to identify potential phishing sites. Uses machine learning for classification.",
+    tech: ["JavaScript", "Chrome API", "ML", "HTML/CSS"],
+    github: "https://github.com/abhimanyu/phishing-detector",
+    demo: "https://demo.example.com"
+  }
+];
+
+// Markdown-to-HTML converter (simplified)
+const parseMarkdown = (markdown) => {
+  let html = markdown;
+  
+  // Headers
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+  
+  // Code blocks
+  html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    return `<pre><code class="language-${lang || 'text'}">${code.trim()}</code></pre>`;
+  });
+  
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  
+  // Bold
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  
+  // Lists
+  html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+  
+  // Paragraphs
+  html = html.split('\n\n').map(para => {
+    if (!para.match(/^<[h|u|p|l]/)) {
+      return `<p>${para}</p>`;
+    }
+    return para;
+  }).join('\n');
+  
+  return html;
+};
+
+const Portfolio = () => {
+  const [currentPage, setCurrentPage] = useState('home');
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Handle navigation
+  const navigate = (page) => {
+    setCurrentPage(page);
+    setSelectedPost(null);
+    setMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  const viewPost = (post) => {
+    setSelectedPost(post);
+    setCurrentPage('post');
+    setMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  // Navigation component
+  const Navigation = () => (
+    <nav className="nav">
+      <div className="nav-container">
+        <button className="logo" onClick={() => navigate('home')}>
+          Abhimanyu Prakash
+        </button>
+        
+        <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+          {menuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        <div className={`nav-links ${menuOpen ? 'active' : ''}`}>
+          <button onClick={() => navigate('home')} className={currentPage === 'home' ? 'active' : ''}>Home</button>
+          <button onClick={() => navigate('blog')} className={currentPage === 'blog' ? 'active' : ''}>Blog</button>
+          <button onClick={() => navigate('projects')} className={currentPage === 'projects' ? 'active' : ''}>Projects</button>
+          <button onClick={() => navigate('about')} className={currentPage === 'about' ? 'active' : ''}>About</button>
+          <button onClick={() => navigate('contact')} className={currentPage === 'contact' ? 'active' : ''}>Contact</button>
+        </div>
+      </div>
+    </nav>
+  );
+
+  // Home page
+  const HomePage = () => (
+    <div className="page">
+      <section className="hero">
+        <h1 className="hero-title">Abhimanyu Prakash</h1>
+        <p className="hero-tagline">Cybersecurity Researcher</p>
+        <p className="hero-description">
+          Passionate about threat hunting, incident response, and building secure systems. 
+          Sharing knowledge through detailed writeups and open-source tools.
+        </p>
+        <div className="hero-cta">
+          <button className="btn-primary" onClick={() => navigate('blog')}>
+            Read My Writeups <ChevronRight size={20} />
+          </button>
+          <button className="btn-secondary" onClick={() => navigate('projects')}>
+            View Projects
+          </button>
+        </div>
+      </section>
+
+      <section className="featured-section">
+        <h2>Latest Writeups</h2>
+        <div className="blog-grid">
+          {blogPosts.slice(0, 3).map(post => (
+            <article key={post.id} className="blog-card" onClick={() => viewPost(post)}>
+              <h3>{post.title}</h3>
+              <p className="excerpt">{post.excerpt}</p>
+              <div className="meta">
+                <span><Calendar size={16} /> {post.date}</span>
+                <span><Clock size={16} /> {post.readTime}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+
+  // Blog listing page
+  const BlogPage = () => (
+    <div className="page">
+      <header className="page-header">
+        <h1>Technical Writeups</h1>
+        <p>Deep dives into cybersecurity challenges, labs, and real-world incidents</p>
+      </header>
+      
+      <div className="blog-list">
+        {blogPosts.map(post => (
+          <article key={post.id} className="blog-item" onClick={() => viewPost(post)}>
+            <h2>{post.title}</h2>
+            <p className="excerpt">{post.excerpt}</p>
+            <div className="meta">
+              <span><Calendar size={16} /> {post.date}</span>
+              <span><Clock size={16} /> {post.readTime}</span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Individual blog post
+  const BlogPost = () => {
+    if (!selectedPost) return null;
+
+    return (
+      <div className="page">
+        <article className="post">
+          <button className="back-link" onClick={() => navigate('blog')}>
+            ← Back to Blog
+          </button>
+          
+          <header className="post-header">
+            <h1>{selectedPost.title}</h1>
+            <div className="post-meta">
+              <span><Calendar size={18} /> {selectedPost.date}</span>
+              <span><Clock size={18} /> {selectedPost.readTime}</span>
+            </div>
+          </header>
+
+          <div 
+            className="post-content"
+            dangerouslySetInnerHTML={{ __html: parseMarkdown(selectedPost.content) }}
+          />
+        </article>
+      </div>
+    );
+  };
+
+  // Projects page
+  const ProjectsPage = () => (
+    <div className="page">
+      <header className="page-header">
+        <h1>Projects</h1>
+        <p>Open-source tools and automation scripts for cybersecurity</p>
+      </header>
+
+      <div className="projects-grid">
+        {projects.map((project, idx) => (
+          <div key={idx} className="project-card">
+            <h3>{project.title}</h3>
+            <p>{project.description}</p>
+            <div className="tech-stack">
+              {project.tech.map((tech, i) => (
+                <span key={i} className="tech-tag">{tech}</span>
+              ))}
+            </div>
+            <div className="project-links">
+              {project.github && (
+                <a href={project.github} target="_blank" rel="noopener noreferrer" className="project-link">
+                  <Github size={18} /> GitHub
+                </a>
+              )}
+              {project.demo && (
+                <a href={project.demo} target="_blank" rel="noopener noreferrer" className="project-link">
+                  <ExternalLink size={18} /> Live Demo
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // About page
+  const AboutPage = () => (
+    <div className="page">
+      <header className="page-header">
+        <h1>About Me</h1>
+      </header>
+
+      <div className="about-content">
+        <section className="about-section">
+          <h2>Who I Am</h2>
+          <p>
+            I'm a cybersecurity enthusiast with a strong foundation in penetration testing, 
+            security operations, and threat analysis. Currently seeking SOC analyst and 
+            cybersecurity internship opportunities where I can apply my technical skills 
+            and continue learning from experienced professionals.
+          </p>
+          <p>
+            My journey in cybersecurity began with a curiosity about how systems can be 
+            compromised and how to defend them. I spend my time participating in CTF 
+            competitions, building security tools, and documenting my learning through 
+            detailed technical writeups.
+          </p>
+        </section>
+
+        <section className="about-section">
+          <h2>Skills</h2>
+          <div className="skills-grid">
+            <div className="skill-category">
+              <h3>Security Operations</h3>
+              <ul>
+                <li>SIEM Tools (Splunk, ELK)</li>
+                <li>Incident Response</li>
+                <li>Threat Hunting</li>
+                <li>Log Analysis</li>
+              </ul>
+            </div>
+            <div className="skill-category">
+              <h3>Penetration Testing</h3>
+              <ul>
+                <li>Network Scanning</li>
+                <li>Web Application Testing</li>
+                <li>Active Directory Attacks</li>
+                <li>Exploitation Frameworks</li>
+              </ul>
+            </div>
+            <div className="skill-category">
+              <h3>Technical Skills</h3>
+              <ul>
+                <li>Linux Administration</li>
+                <li>Python Scripting</li>
+                <li>Network Protocols</li>
+                <li>Wireshark Analysis</li>
+              </ul>
+            </div>
+            <div className="skill-category">
+              <h3>Tools & Platforms</h3>
+              <ul>
+                <li>Metasploit, Burp Suite</li>
+                <li>Nmap, Nessus</li>
+                <li>Git, Docker</li>
+                <li>TryHackMe, HackTheBox</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className="about-section">
+          <h2>Certifications</h2>
+          <ul className="cert-list">
+            <li>CompTIA Security+ (In Progress)</li>
+            <li>TryHackMe: Jr Penetration Tester Path</li>
+            <li>Coursera: Google Cybersecurity Professional Certificate</li>
+          </ul>
+        </section>
+
+        <section className="about-section">
+          <button className="btn-primary">
+            <Download size={20} /> Download Resume
+          </button>
+        </section>
+      </div>
+    </div>
+  );
+
+  // Contact page
+  const ContactPage = () => (
+    <div className="page">
+      <header className="page-header">
+        <h1>Get In Touch</h1>
+        <p>Feel free to reach out for collaboration, opportunities, or just to connect</p>
+      </header>
+
+      <div className="contact-content">
+        <div className="contact-links">
+          <a href="mailto:abhimanyu@example.com" className="contact-link">
+            <Mail size={24} />
+            <div>
+              <h3>Email</h3>
+              <p>abhimanyu@example.com</p>
+            </div>
+          </a>
+
+          <a href="https://github.com/abhimanyu" target="_blank" rel="noopener noreferrer" className="contact-link">
+            <Github size={24} />
+            <div>
+              <h3>GitHub</h3>
+              <p>github.com/abhimanyu</p>
+            </div>
+          </a>
+
+          <a href="https://linkedin.com/in/abhimanyu" target="_blank" rel="noopener noreferrer" className="contact-link">
+            <Linkedin size={24} />
+            <div>
+              <h3>LinkedIn</h3>
+              <p>linkedin.com/in/abhimanyu</p>
+            </div>
+          </a>
+
+          <a href="https://twitter.com/abhimanyu" target="_blank" rel="noopener noreferrer" className="contact-link">
+            <Twitter size={24} />
+            <div>
+              <h3>Twitter</h3>
+              <p>@abhimanyu</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Footer
+  const Footer = () => (
+    <footer className="footer">
+      <div className="footer-content">
+        <p>&copy; 2024 Abhimanyu Prakash. All rights reserved.</p>
+        <div className="footer-links">
+          <a href="https://github.com/abhimanyu" target="_blank" rel="noopener noreferrer">
+            <Github size={20} />
+          </a>
+          <a href="https://linkedin.com/in/abhimanyu" target="_blank" rel="noopener noreferrer">
+            <Linkedin size={20} />
+          </a>
+          <a href="https://twitter.com/abhimanyu" target="_blank" rel="noopener noreferrer">
+            <Twitter size={20} />
+          </a>
+        </div>
+      </div>
+    </footer>
+  );
+
+  return (
+    <div className="portfolio">
+      <Navigation />
+      
+      <main className="main">
+        {currentPage === 'home' && <HomePage />}
+        {currentPage === 'blog' && <BlogPage />}
+        {currentPage === 'post' && <BlogPost />}
+        {currentPage === 'projects' && <ProjectsPage />}
+        {currentPage === 'about' && <AboutPage />}
+        {currentPage === 'contact' && <ContactPage />}
+      </main>
+
+      <Footer />
+
+      <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+          line-height: 1.6;
+          color: #1a1a1a;
+          background: #ffffff;
+        }
+
+        .portfolio {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* Navigation */
+        .nav {
+          background: #ffffff;
+          border-bottom: 1px solid #e6e6e6;
+          position: sticky;
+          top: 0;
+          z-index: 100;
+        }
+
+        .nav-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 1rem 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .logo {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #1a1a1a;
+          background: none;
+          border: none;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+
+        .logo:hover {
+          color: #0066cc;
+        }
+
+        .menu-toggle {
+          display: none;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #1a1a1a;
+        }
+
+        .nav-links {
+          display: flex;
+          gap: 2rem;
+        }
+
+        .nav-links button {
+          background: none;
+          border: none;
+          color: #666;
+          cursor: pointer;
+          font-size: 0.95rem;
+          font-weight: 500;
+          transition: color 0.2s;
+          padding: 0.5rem 0;
+          position: relative;
+        }
+
+        .nav-links button:hover,
+        .nav-links button.active {
+          color: #1a1a1a;
+        }
+
+        .nav-links button.active::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 2px;
+          background: #1a1a1a;
+        }
+
+        /* Main content */
+        .main {
+          flex: 1;
+          max-width: 1200px;
+          margin: 0 auto;
+          width: 100%;
+          padding: 2rem;
+        }
+
+        .page {
+          animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Hero section */
+        .hero {
+          text-align: center;
+          padding: 4rem 2rem;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .hero-title {
+          font-size: 3.5rem;
+          font-weight: 700;
+          margin-bottom: 1rem;
+          color: #1a1a1a;
+        }
+
+        .hero-tagline {
+          font-size: 1.5rem;
+          color: #666;
+          margin-bottom: 1.5rem;
+        }
+
+        .hero-description {
+          font-size: 1.1rem;
+          color: #666;
+          line-height: 1.8;
+          margin-bottom: 2rem;
+        }
+
+        .hero-cta {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .btn-primary, .btn-secondary {
+          padding: 0.875rem 1.75rem;
+          border: none;
+          border-radius: 4px;
+          font-size: 1rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .btn-primary {
+          background: #1a1a1a;
+          color: #ffffff;
+        }
+
+        .btn-primary:hover {
+          background: #333;
+          transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+          background: #ffffff;
+          color: #1a1a1a;
+          border: 1px solid #e6e6e6;
+        }
+
+        .btn-secondary:hover {
+          border-color: #1a1a1a;
+          transform: translateY(-1px);
+        }
+
+        /* Featured section */
+        .featured-section {
+          padding: 4rem 0;
+        }
+
+        .featured-section h2 {
+          font-size: 2rem;
+          margin-bottom: 2rem;
+          text-align: center;
+        }
+
+        .blog-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 2rem;
+        }
+
+        .blog-card {
+          padding: 2rem;
+          border: 1px solid #e6e6e6;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .blog-card:hover {
+          border-color: #1a1a1a;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .blog-card h3 {
+          font-size: 1.5rem;
+          margin-bottom: 1rem;
+          color: #1a1a1a;
+        }
+
+        .excerpt {
+          color: #666;
+          margin-bottom: 1rem;
+          line-height: 1.7;
+        }
+
+        .meta {
+          display: flex;
+          gap: 1.5rem;
+          color: #999;
+          font-size: 0.875rem;
+        }
+
+        .meta span {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+        }
+
+        /* Page header */
+        .page-header {
+          text-align: center;
+          padding: 3rem 0;
+          border-bottom: 1px solid #e6e6e6;
+          margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+          font-size: 2.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+          color: #666;
+          font-size: 1.1rem;
+        }
+
+        /* Blog list */
+        .blog-list {
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .blog-item {
+          padding: 2rem 0;
+          border-bottom: 1px solid #e6e6e6;
+          cursor: pointer;
+          transition: opacity 0.2s;
+        }
+
+        .blog-item:hover {
+          opacity: 0.7;
+        }
+
+        .blog-item h2 {
+          font-size: 1.75rem;
+          margin-bottom: 0.75rem;
+          color: #1a1a1a;
+        }
+
+        /* Blog post */
+        .post {
+          max-width: 740px;
+          margin: 0 auto;
+        }
+
+        .back-link {
+          display: inline-flex;
+          align-items: center;
+          color: #0066cc;
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 0.95rem;
+          margin-bottom: 2rem;
+          transition: opacity 0.2s;
+        }
+
+        .back-link:hover {
+          opacity: 0.7;
+        }
+
+        .post-header {
+          margin-bottom: 3rem;
+          padding-bottom: 2rem;
+          border-bottom: 1px solid #e6e6e6;
+        }
+
+        .post-header h1 {
+          font-size: 2.5rem;
+          line-height: 1.3;
+          margin-bottom: 1.5rem;
+          font-family: Georgia, serif;
+        }
+
+        .post-meta {
+          display: flex;
+          gap: 2rem;
+          color: #999;
+        }
+
+        .post-meta span {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .post-content {
+          font-family: Georgia, serif;
+          font-size: 1.125rem;
+          line-height: 1.8;
+          color: #1a1a1a;
+        }
+
+        .post-content h1 {
+          font-size: 2rem;
+          margin: 2.5rem 0 1rem;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .post-content h2 {
+          font-size: 1.75rem;
+          margin: 2rem 0 1rem;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .post-content h3 {
+          font-size: 1.5rem;
+          margin: 1.5rem 0 0.75rem;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .post-content p {
+          margin-bottom: 1.5rem;
+        }
+
+        .post-content ul, .post-content ol {
+          margin-bottom: 1.5rem;
+          padding-left: 2rem;
+        }
+
+        .post-content li {
+          margin-bottom: 0.5rem;
+        }
+
+        .post-content code {
+          background: #f5f5f5;
+          padding: 0.2rem 0.4rem;
+          border-radius: 3px;
+          font-family: 'Monaco', 'Menlo', monospace;
+          font-size: 0.9em;
+          color: #d73a49;
+        }
+
+        .post-content pre {
+          background: #1e1e1e;
+          color: #d4d4d4;
+          padding: 1.5rem;
+          border-radius: 6px;
+          overflow-x: auto;
+          margin: 2rem 0;
+        }
+
+        .post-content pre code {
+          background: none;
+          color: inherit;
+          padding: 0;
+          font-size: 0.9rem;
+        }
+
+        /* Projects */
+        .projects-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 2rem;
+        }
+
+        .project-card {
+          padding: 2rem;
+          border: 1px solid #e6e6e6;
+          border-radius: 8px;
+          transition: all 0.2s;
+        }
+
+        .project-card:hover {
+          border-color: #1a1a1a;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .project-card h3 {
+          font-size: 1.5rem;
+          margin-bottom: 1rem;
+          color: #1a1a1a;
+        }
+
+        .project-card p {
+          color: #666;
+          margin-bottom: 1.5rem;
+          line-height: 1.7;
+        }
+
+        .tech-stack {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .tech-tag {
+          background: #f5f5f5;
+          padding: 0.375rem 0.75rem;
+          border-radius: 4px;
+          font-size: 0.875rem;
+          color: #666;
+        }
+
+        .project-links {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .project-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #0066cc;
+          text-decoration: none;
+          font-size: 0.95rem;
+          transition: opacity 0.2s;
+        }
+
+        .project-link:hover {
+          opacity: 0.7;
+        }
+
+        /* About page */
+        .about-content {
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .about-section {
+          margin-bottom: 3rem;
+        }
+
+        .about-section h2 {
+          font-size: 1.75rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .about-section p {
+          color: #666;
+          line-height: 1.8;
+          margin-bottom: 1rem;
+        }
+
+        .skills-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 2rem;
+          margin-top: 2rem;
+        }
+
+        .skill-category h3 {
+          font-size: 1.25rem;
+          margin-bottom: 1rem;
+          color: #1a1a1a;
+        }
+
+        .skill-category ul {
+          list-style: none;
+        }
+
+        .skill-category li {
+          color: #666;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid #f5f5f5;
+        }
+
+        .cert-list {
+          list-style: none;
+        }
+
+        .cert-list li {
+          color: #666;
+          padding: 0.75rem 0;
+          border-bottom: 1px solid #e6e6e6;
+        }
+
+        /* Contact page */
+        .contact-content {
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        .contact-links {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .contact-link {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          padding: 1.5rem;
+          border: 1px solid #e6e6e6;
+          border-radius: 8px;
+          text-decoration: none;
+          color: #1a1a1a;
+          transition: all 0.2s;
+        }
+
+        .contact-link:hover {
+          border-color: #1a1a1a;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .contact-link h3 {
+          font-size: 1.125rem;
+          margin-bottom: 0.25rem;
+        }
+
+        .contact-link p {
+          color: #666;
+          font-size: 0.95rem;
+        }
+
+        /* Footer */
+        .footer {
+          background: #f9f9f9;
+          border-top: 1px solid #e6e6e6;
+          margin-top: 4rem;
+        }
+
+        .footer-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .footer-content p {
+          color: #666;
+          font-size: 0.9rem;
+        }
+
+        .footer-links {
+          display: flex;
+          gap: 1.5rem;
+        }
+
+        .footer-links a {
+          color: #666;
+          transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+          color: #1a1a1a;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+          .menu-toggle {
+            display: block;
+          }
+
+          .nav-links {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-bottom: 1px solid #e6e6e6;
+            flex-direction: column;
+            padding: 1rem 2rem;
+            display: none;
+            gap: 0;
+          }
+
+          .nav-links.active {
+            display: flex;
+          }
+
+          .nav-links button {
+            padding: 1rem 0;
+            text-align: left;
+            border-bottom: 1px solid #f5f5f5;
+          }
+
+          .hero-title {
+            font-size: 2.5rem;
+          }
+
+          .hero-tagline {
+            font-size: 1.25rem;
+          }
+
+          .blog-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .projects-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .skills-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .footer-content {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+          }
+
+          .post-header h1 {
+            font-size: 2rem;
+          }
+
+          .post-content {
+            font-size: 1.05rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .main {
+            padding: 1rem;
+          }
+
+          .hero {
+            padding: 2rem 1rem;
+          }
+
+          .hero-title {
+            font-size: 2rem;
+          }
+
+          .hero-cta {
+            flex-direction: column;
+          }
+
+          .hero-cta button {
+            width: 100%;
+          }
+        }
+      `}
